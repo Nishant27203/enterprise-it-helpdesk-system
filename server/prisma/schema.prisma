@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  IT_TECHNICIAN
+  IT_MANAGER
+  ADMIN
+}
+
+enum TicketStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  PENDING_USER
+  ESCALATED
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum EscalationLevel {
+  L1
+  L2
+  L3
+}
+
+enum HistoryAction {
+  TICKET_CREATED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  ASSIGNED
+  REASSIGNED
+  COMMENT_ADDED
+  ESCALATED
+  RESOLVED
+  CLOSED
+  REOPENED
+  SLA_BREACHED
+  FEEDBACK_SUBMITTED
+}
+
+enum NotificationType {
+  TICKET_CREATED
+  TICKET_ASSIGNED
+  TICKET_ESCALATED
+  STATUS_CHANGED
+  TICKET_RESOLVED
+  SLA_APPROACHING
+  SLA_BREACHED
+  COMMENT_ADDED
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users   User[]
+  tickets Ticket[]
+
+  @@map("departments")
+}
+
+model User {
+  id              String           @id @default(uuid())
+  email           String           @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  role            Role             @default(EMPLOYEE)
+  departmentId    String?
+  escalationLevel EscalationLevel?
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  department          Department?       @relation(fields: [departmentId], references: [id])
+  requestedTickets    Ticket[]          @relation("TicketRequester")
+  assignedTickets     Ticket[]          @relation("TicketAssignee")
+  comments            TicketComment[]
+  historyEntries      TicketHistory[]
+  escalationsCreated  Escalation[]      @relation("EscalationBy")
+  escalationsReceived Escalation[]      @relation("EscalationTo")
+  knowledgeArticles   KnowledgeArticle[]
+  notifications       Notification[]
+
+  @@index([role])
+  @@index([departmentId])
+  @@map("users")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subcategories Subcategory[]
+  tickets       Ticket[]
+  articles      KnowledgeArticle[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id         String   @id @default(uuid())
+  name       String
+  categoryId String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id])
+  tickets  Ticket[]
+
+  @@unique([categoryId, name])
+  @@index([categoryId])
+  @@map("subcategories")
+}
+
+model SLAPolicy {
+  id                   String   @id @default(uuid())
+  priority             Priority @unique
+  responseTimeMinutes  Int
+  resolutionTimeMinutes Int
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  tickets Ticket[]
+
+  @@map("sla_policies")
+}
+
+model TicketCounter {
+  id         String @id @default(uuid())
+  year       Int    @unique
+  lastNumber Int    @default(0)
+
+  @@map("ticket_counters")
+}
+
+model Ticket {
+  id                  String           @id @default(uuid())
+  ticketNumber        String           @unique
+  title               String
+  description         String
+  categoryId          String
+  subcategoryId       String
+  priority            Priority         @default(MEDIUM)
+  status              TicketStatus     @default(OPEN)
+  requesterId         String
+  departmentId        String
+  assignedToId        String?
+  escalationLevel     EscalationLevel  @default(L1)
+  slaPolicyId         String
+  slaResponseDue      DateTime
+  slaResolutionDue    DateTime
+  firstResponseAt     DateTime?
+  resolvedAt          DateTime?
+  closedAt            DateTime?
+  resolutionNotes     String?
+  rootCause           String?
+  troubleshootingNotes String?
+  satisfactionRating  Int?
+  feedbackComment     String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  category     Category        @relation(fields: [categoryId], references: [id])
+  subcategory  Subcategory     @relation(fields: [subcategoryId], references: [id])
+  requester    User            @relation("TicketRequester", fields: [requesterId], references: [id])
+  department   Department      @relation(fields: [departmentId], references: [id])
+  assignedTo   User?           @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  slaPolicy    SLAPolicy       @relation(fields: [slaPolicyId], references: [id])
+  comments     TicketComment[]
+  history      TicketHistory[]
+  escalations  Escalation[]
+  notifications Notification[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([requesterId])
+  @@index([assignedToId])
+  @@index([departmentId])
+  @@index([createdAt])
+  @@index([slaResolutionDue])
+  @@map("tickets")
+}
+
+model TicketComment {
+  id         String   @id @default(uuid())
+  ticketId   String
+  authorId   String
+  content    String
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id])
+
+  @@index([ticketId])
+  @@map("ticket_comments")
+}
+
+model TicketHistory {
+  id        String        @id @default(uuid())
+  ticketId  String
+  actorId   String
+  action    HistoryAction
+  metadata  Json?
+  createdAt DateTime      @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor  User   @relation(fields: [actorId], references: [id])
+
+  @@index([ticketId])
+  @@index([createdAt])
+  @@map("ticket_history")
+}
+
+model Escalation {
+  id            String          @id @default(uuid())
+  ticketId      String
+  escalatedById String
+  escalatedToId String?
+  fromLevel     EscalationLevel
+  toLevel       EscalationLevel
+  reason        String
+  notes         String?
+  createdAt     DateTime        @default(now())
+
+  ticket      Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  escalatedBy User   @relation("EscalationBy", fields: [escalatedById], references: [id])
+  escalatedTo User?  @relation("EscalationTo", fields: [escalatedToId], references: [id])
+
+  @@index([ticketId])
+  @@map("escalations")
+}
+
+model KnowledgeArticle {
+  id                   String   @id @default(uuid())
+  title                String
+  categoryId           String?
+  problem              String
+  troubleshootingSteps String
+  resolution           String
+  authorId             String
+  tags                 String[]
+  isPublished          Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  category Category? @relation(fields: [categoryId], references: [id])
+  author   User      @relation(fields: [authorId], references: [id])
+
+  @@index([title])
+  @@map("knowledge_articles")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  ticketId  String?
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticket Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
