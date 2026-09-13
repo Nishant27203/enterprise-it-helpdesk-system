@@ -405,25 +405,25 @@ Additional seeded account: `tech.l2@company.com` (L2 Technician, same password).
 
 *Manager analytics with KPI cards and live charts from PostgreSQL.*
 
-### Reports
+### Reports & Analytics
 
-![Reports](docs/screenshots/reports.png)
+![Reports & Analytics](docs/screenshots/reports.png)
 
 *Reports page with SLA compliance, resolution time, and department volume.*
 
-### Admin — User Management
+### Admin User Management
 
-![Admin Users](docs/screenshots/admin-users.png)
+![Admin User Management](docs/screenshots/admin-users.png)
 
 *Administrator panel for creating and managing user accounts.*
 
-### Admin — Categories
+### Admin Categories
 
 ![Admin Categories](docs/screenshots/admin-categories.png)
 
 *Category and subcategory overview for IT support classification.*
 
-### Admin — SLA Policies
+### Admin SLA Policies
 
 ![Admin SLA Policies](docs/screenshots/admin-sla.png)
 
