@@ -375,56 +375,64 @@ Additional seeded account: `tech.l2@company.com` (L2 Technician, same password).
 
 ## Screenshots
 
-*Add screenshots to* `docs/screenshots/` *and they will render below.*
-
 ### Employee Dashboard
 
-Employee Dashboard
+![Employee Dashboard](docs/screenshots/employee-dashboard.png)
+
 *Employee portal showing open, in-progress, and recent tickets.*
 
 ### Create Ticket
 
-Create Ticket
+![Create Ticket](docs/screenshots/create-ticket.png)
+
 *Ticket submission form with category, subcategory, and priority selection.*
 
 ### Technician Dashboard
 
-Technician Dashboard
+![Technician Dashboard](docs/screenshots/technician-dashboard.png)
+
 *Technician view with assigned queue, SLA at-risk, and priority summaries.*
 
 ### Ticket Resolution
 
-Ticket Resolution
+![Ticket Resolution](docs/screenshots/ticket-resolution.png)
+
 *Ticket detail with troubleshooting notes, resolution, and activity timeline.*
 
 ### Manager Dashboard
 
-Manager Dashboard
+![Manager Dashboard](docs/screenshots/manager-dashboard.png)
+
 *Manager analytics with KPI cards and live charts from PostgreSQL.*
 
 ### Reports
 
-Reports
+![Reports](docs/screenshots/reports.png)
+
 *Reports page with SLA compliance, resolution time, and department volume.*
 
 ### Admin — User Management
 
-Admin Users
+![Admin Users](docs/screenshots/admin-users.png)
+
 *Administrator panel for creating and managing user accounts.*
 
 ### Admin — Categories
 
-Categories
+![Admin Categories](docs/screenshots/admin-categories.png)
+
 *Category and subcategory overview for IT support classification.*
 
 ### Admin — SLA Policies
 
-SLA Policies
+![Admin SLA Policies](docs/screenshots/admin-sla.png)
+
 *Configurable SLA response and resolution times per priority level.*
 
 ### Knowledge Base
 
-Knowledge Base
+![Knowledge Base](docs/screenshots/knowledge-base.png)
+
 *Searchable IT support articles with tags and troubleshooting steps.*
 
 ---
